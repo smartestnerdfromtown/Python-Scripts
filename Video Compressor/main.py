@@ -1,41 +1,52 @@
-import os
-from numpy import round
-import pathlib
+from pathlib import Path
 import subprocess
 
-print(os.getcwd())
+VIDEO_DIR = Path("videos")
+CRF_VALUE = 28
+PRESET = "slow"
 
-def size_mb(path):
-    return f"{round(os.path.getsize(path) / 1024 / 1024, 2)} MB"
+def size_mb(path: Path) -> str:
+    size = path.stat().st_size / 1024 / 1024
+    return f"{size:.2f} MB"
 
-def compress(path):
-    basename = pathlib.Path(path).stem
-    extension = pathlib.Path(path).suffix
-    output_filepath = f"videos/{basename}_compressed{extension}"
-    
-    print(basename, extension, output_filepath)
+def compress(input_path: Path):
+    if not input_path.exists():
+        raise FileNotFoundError(f"File not found: {input_path}")
+
+    VIDEO_DIR.mkdir(exist_ok=True)
+
+    output_path = input_path.with_name(
+        f"{input_path.stem}_compressed{input_path.suffix}"
+    )
+
+    print(f"Compressing: {input_path.name}")
+    print(f"Output: {output_path}")
 
     subprocess.run([
         "ffmpeg",
-        "-i", path,
+        "-y",                     # overwrite without prompt
+        "-i", str(input_path),
         "-c:v", "libx264",
-        "-crf", "28", # Classic is 23, but I needed stronger compression.
-        "-preset", "slow",
+        "-crf", str(CRF_VALUE),   # Classic is 23, but I needed stronger compression.
+        "-preset", PRESET,
         "-c:a", "copy",
-        output_filepath
+        str(output_path)
     ], check=True)
 
-    return output_filepath
+    return output_path
 
-def main():
-    pass
+def main() -> None:
+    input_file = VIDEO_DIR / "Шифрование.mp4"
+
+    print(f"Working directory: {Path.cwd()}")
+    size_before = size_mb(input_file)
+    
+    output_file = compress(input_file)
+    size_after = size_mb(input_file)
+
+    print(f"Before: {size_before}")
+    print(f"After: {size_after}")
+
 
 if __name__ == "__main__":
     main()
-    
-    filepath = "videos/Шифрование.mp4"
-    size_before = size_mb(path=filepath)
-    output_filepath = compress(path=filepath)
-    size_after = size_mb(path=output_filepath)
-    print(size_before)
-    print(size_after)
