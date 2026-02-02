@@ -1,6 +1,9 @@
 # User
 videos/
 PDFs/
+AUDIO/
+input_video/
+output_audio/
 
 
 # Byte-compiled / optimized / DLL files
